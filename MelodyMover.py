@@ -10,37 +10,48 @@ import time
 import re
 
 SUPPORTED_FORMATS = ('.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.wma', '.opus')
+REMOVABLE_FORMATS = ('.nfo', '.cue', '.m3u', '.log', '.jpg', '.png')
 
 class MelodyMoverApp(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title="MelodyMover")
-        self.set_default_size(600, 500)
+        self.set_default_size(800, 600)
         self.set_border_width(10)
 
-        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        self.add(self.main_box)
+        # Make the whole window a drop target
+        self.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
+        self.drag_dest_add_uri_targets()
+        self.connect("drag-data-received", self.on_drag_data_received)
 
-        # Manual search button
+        main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.add(main_vbox)
+
+        # Top section
+        top_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        main_vbox.pack_start(top_hbox, False, True, 0)
+
         self.manual_search_button = Gtk.Button(label="Manual Folder Search")
         self.manual_search_button.connect("clicked", self.on_manual_search_clicked)
-        self.main_box.pack_start(self.manual_search_button, False, False, 0)
+        top_hbox.pack_start(self.manual_search_button, False, False, 0)
 
-        # Drag and Drop area
-        self.drop_area = Gtk.Label(label="Drag and drop album folders here")
-        self.drop_area.set_size_request(-1, 80)
-        self.main_box.pack_start(self.drop_area, False, False, 0)
+        self.dest_folder_button = Gtk.Button(label="Choose Destination Folder")
+        self.dest_folder_button.connect("clicked", self.on_folder_clicked)
+        top_hbox.pack_start(self.dest_folder_button, False, False, 0)
 
-        # Enable drag and drop
-        self.drop_area.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
-        self.drop_area.connect("drag-data-received", self.on_drag_data_received)
-        self.drop_area.drag_dest_add_uri_targets()
+        self.clear_all_button = Gtk.Button(label="Clear All")
+        self.clear_all_button.connect("clicked", self.on_clear_all_clicked)
+        top_hbox.pack_start(self.clear_all_button, False, False, 0)
 
-        # Scrolled window for the list of folders
+        # Drag and Drop message
+        self.drop_label = Gtk.Label(label="Drag and drop album folders here")
+        main_vbox.pack_start(self.drop_label, False, False, 0)
+
+        # Folder list
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.main_box.pack_start(scrolled_window, True, True, 0)
+        scrolled_window.set_min_content_height(200)
+        main_vbox.pack_start(scrolled_window, True, True, 0)
 
-        # List store and view for dragged folders
         self.list_store = Gtk.ListStore(str, str, str)  # Folder path, Status, New Name
         self.tree_view = Gtk.TreeView(model=self.list_store)
         scrolled_window.add(self.tree_view)
@@ -58,24 +69,19 @@ class MelodyMoverApp(Gtk.Window):
         column = Gtk.TreeViewColumn("New Name", renderer, text=2)
         self.tree_view.append_column(column)
 
-        # Right-click menu for deleting folders
         self.tree_view.connect("button-press-event", self.on_button_press)
         self.tree_view.connect("key-press-event", self.on_key_press)
 
-        # Delete button
-        delete_button = Gtk.Button(label="Delete Selected")
-        delete_button.connect("clicked", self.on_delete_clicked)
-        self.main_box.pack_start(delete_button, False, False, 0)
+        # Options section
+        options_hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        main_vbox.pack_start(options_hbox, False, True, 0)
 
-        # Destination folder chooser
-        self.dest_folder_button = Gtk.Button(label="Choose Destination Folder")
-        self.dest_folder_button.connect("clicked", self.on_folder_clicked)
-        self.main_box.pack_start(self.dest_folder_button, False, False, 0)
-
-        # Metadata editing
+        # Metadata frame
         metadata_frame = Gtk.Frame(label="Metadata")
-        self.main_box.pack_start(metadata_frame, False, False, 0)
+        options_hbox.pack_start(metadata_frame, True, True, 0)
         metadata_grid = Gtk.Grid()
+        metadata_grid.set_column_spacing(5)
+        metadata_grid.set_row_spacing(5)
         metadata_frame.add(metadata_grid)
 
         self.metadata_fields = {}
@@ -86,10 +92,12 @@ class MelodyMoverApp(Gtk.Window):
             metadata_grid.attach(entry, 1, i, 1, 1)
             self.metadata_fields[field] = entry
 
-        # Transcode options
+        # Transcode frame
         transcode_frame = Gtk.Frame(label="Transcode Options")
-        self.main_box.pack_start(transcode_frame, False, False, 0)
+        options_hbox.pack_start(transcode_frame, True, True, 0)
         transcode_grid = Gtk.Grid()
+        transcode_grid.set_column_spacing(5)
+        transcode_grid.set_row_spacing(5)
         transcode_frame.add(transcode_grid)
 
         self.transcode_check = Gtk.CheckButton(label="Transcode files")
@@ -129,18 +137,31 @@ class MelodyMoverApp(Gtk.Window):
         threads_help.set_tooltip_text("Number of CPU threads to use for transcoding. Higher values may speed up the process but use more system resources. Default is number of CPU cores minus one.")
         transcode_grid.attach(threads_help, 2, 4, 1, 1)
 
+        # File removal options
+        remove_frame = Gtk.Frame(label="Remove Files")
+        options_hbox.pack_start(remove_frame, True, True, 0)
+        remove_grid = Gtk.Grid()
+        remove_grid.set_column_spacing(5)
+        remove_grid.set_row_spacing(5)
+        remove_frame.add(remove_grid)
+
+        self.remove_checkboxes = {}
+        for i, fmt in enumerate(REMOVABLE_FORMATS):
+            checkbox = Gtk.CheckButton(label=fmt)
+            remove_grid.attach(checkbox, i % 2, i // 2, 1, 1)
+            self.remove_checkboxes[fmt] = checkbox
+
         # Process button
         self.process_button = Gtk.Button(label="Process")
         self.process_button.connect("clicked", self.on_process_clicked)
-        self.main_box.pack_start(self.process_button, False, False, 0)
+        main_vbox.pack_start(self.process_button, False, False, 0)
 
-        # Overall progress bar
+        # Progress bars
         self.overall_progress = Gtk.ProgressBar()
-        self.main_box.pack_start(self.overall_progress, False, False, 0)
+        main_vbox.pack_start(self.overall_progress, False, False, 0)
 
-        # Current file progress bar
         self.file_progress = Gtk.ProgressBar()
-        self.main_box.pack_start(self.file_progress, False, False, 0)
+        main_vbox.pack_start(self.file_progress, False, False, 0)
 
         self.dest_folder = None
         self.album_folders = []
@@ -185,6 +206,10 @@ class MelodyMoverApp(Gtk.Window):
             self.dest_folder_button.set_label(f"Destination: {self.dest_folder}")
         dialog.destroy()
 
+    def on_clear_all_clicked(self, widget):
+        self.list_store.clear()
+        self.update_drop_area_text()
+
     def on_folder_name_edited(self, widget, path, text):
         self.list_store[path][2] = text
 
@@ -200,9 +225,6 @@ class MelodyMoverApp(Gtk.Window):
         if Gdk.keyval_name(event.keyval) == 'Delete':
             self.delete_selected_folder()
             return True
-
-    def on_delete_clicked(self, button):
-        self.delete_selected_folder()
 
     def show_context_menu(self, event):
         menu = Gtk.Menu()
@@ -227,7 +249,6 @@ class MelodyMoverApp(Gtk.Window):
             self.show_error_dialog("Please select a destination folder and add album folders.")
             return
 
-        # Validate year input
         year = self.metadata_fields['year'].get_text()
         if year and not re.match(r'^\d{4}$', year):
             self.show_error_dialog("Invalid year format. Please enter a 4-digit year or leave it blank.")
@@ -259,6 +280,11 @@ class MelodyMoverApp(Gtk.Window):
                 src_path = os.path.join(root, file)
                 rel_path = os.path.relpath(src_path, album_folder)
                 dest_path = os.path.join(dest_album_folder, rel_path)
+                
+                file_ext = os.path.splitext(file)[1].lower()
+                if file_ext in REMOVABLE_FORMATS and self.remove_checkboxes[file_ext].get_active():
+                    continue
+
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
                 if file.lower().endswith(SUPPORTED_FORMATS):
@@ -313,7 +339,7 @@ class MelodyMoverApp(Gtk.Window):
 
     def update_drop_area_text(self):
         count = len(self.list_store)
-        self.drop_area.set_text(f"{count} album folder{'s' if count != 1 else ''} selected")
+        self.drop_label.set_text(f"{count} album folder{'s' if count != 1 else ''} selected")
 
     def update_status(self, album_folder, status):
         for row in self.list_store:
@@ -354,8 +380,3 @@ win.connect("destroy", Gtk.main_quit)
 win.show_all()
 Gtk.main()
 
-
-
-###################################################
-### last touches or future updates:
-##  please make it so both Transcode and Metadata fields appear next to each other; also some responsiveness to window tiling managers so u can still see all the buttons and info, make an option to get read of certain files like .nfo .cue .m3u, option to clean the list, if its possible to make the whole area of the app as possible drop spot then we can reduce the message area to just one line 
