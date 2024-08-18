@@ -1,3 +1,7 @@
+##############
+### make it so if thers some dep missing, ask to install it maybe through either pip or pacman if arch
+
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Pango
