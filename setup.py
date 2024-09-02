@@ -12,7 +12,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Cristian158/melodymover",
-    packages=find_packages(),
+    packages=find_packages(include=['melodymover', 'melodymover.*']),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: End Users/Desktop",

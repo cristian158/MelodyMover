@@ -14,7 +14,12 @@ sha256sums=('SKIP')
 
 prepare() {
     cd "$srcdir"
-    mv "$pkgname-$pkgver" "$pkgname"
+    mv "melodymover-$pkgver" "$pkgname"
+}
+
+build() {
+    cd "$srcdir/$pkgname"
+    python setup.py build
 }
 
 package() {
@@ -22,13 +27,10 @@ package() {
     python setup.py install --root="$pkgdir" --optimize=1
     install -Dm644 LICENSE.md "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     
-    # Find the melodymover directory
-    melody_dir=$(find . -type d -name "melodymover")
-    if [ -z "$melody_dir" ]; then
-        echo "Error: melodymover directory not found"
-        exit 1
-    fi
-    
     # Explicitly copy Python files
     mkdir -p "$pkgdir/usr/lib/python3.12/site-packages/melodymover"
+    cp -r MelodyMover.py "$pkgdir/usr/lib/python3.12/site-packages/melodymover/"
+    
+    # Ensure the main script is executable
+    chmod +x "$pkgdir/usr/bin/melodymover"
 }
