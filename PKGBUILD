@@ -21,4 +21,12 @@ package() {
     cd "$srcdir/$pkgname"
     python setup.py install --root="$pkgdir" --optimize=1
     install -Dm644 LICENSE.md "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    
+    # Explicitly copy Python files
+    mkdir -p "$pkgdir/usr/lib/python3.12/site-packages/melodymover"
+    cp melodymover/*.py "$pkgdir/usr/lib/python3.12/site-packages/melodymover/"
+    cp melodymover/*.glade "$pkgdir/usr/lib/python3.12/site-packages/melodymover/"
+    
+    # Ensure the main script is executable
+    chmod +x "$pkgdir/usr/bin/melodymover"
 }
