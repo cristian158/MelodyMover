@@ -1,0 +1,17 @@
+pkgbase = melodymover
+	pkgdesc = A powerful and user-friendly desktop application for organizing and managing music collections
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/Cristian158/melodymover
+	arch = any
+	license = MIT
+	makedepends = python-setuptools
+	depends = python
+	depends = python-gobject
+	depends = gtk3
+	depends = ffmpeg
+	depends = python-mutagen
+	source = melodymover-1.0.0.tar.gz::https://github.com/Cristian158/melodymover/archive/v1.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = melodymover
