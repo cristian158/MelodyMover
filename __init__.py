@@ -1,0 +1,1 @@
+"""MelodyMover - A music organization tool."""
