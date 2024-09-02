@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
@@ -6,7 +8,6 @@ import shutil
 import mutagen
 import subprocess
 import threading
-import time
 import re
 
 SUPPORTED_FORMATS = ('.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.wma', '.opus')
@@ -375,8 +376,8 @@ class MelodyMoverApp(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-win = MelodyMoverApp()
-win.connect("destroy", Gtk.main_quit)
-win.show_all()
-Gtk.main()
-
+if __name__ == "__main__":
+    win = MelodyMoverApp()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()

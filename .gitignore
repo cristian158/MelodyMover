@@ -1,0 +1,50 @@
+# .gitignore for MelodyMover project
+
+# Ignore build artifacts and temporary files
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# Ignore virtual environment
+venv/
+env/
+.venv/
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore project-specific files
+.SRCINFO
+.releases.md
+
+# Ignore logs and databases
+*.log
+*.sqlite3
+
+# Ignore configuration files that may contain sensitive information
+config.ini
+secrets.json
+
+# Ignore any local development files
+local_settings.py
+
+# Ignore package manager files
+pip-lock.txt
+poetry.lock
+
+# Ignore coverage reports
+.coverage
+htmlcov/
+
+# Ignore any backup files
+*.bak
