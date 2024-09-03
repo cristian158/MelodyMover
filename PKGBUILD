@@ -1,7 +1,7 @@
 # Maintainer: Cristian Novoa <cnovoa.o@gmail.com>
 
 pkgname=melodymover
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc="A powerful and user-friendly desktop application for organizing and managing music collections"
 arch=('any')
