@@ -31,7 +31,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "melodymover=melodymover.MelodyMover:main",
+            "melodymover=melodymover.melodymover:main",
         ],
     },
     package_data={
