@@ -1,7 +1,7 @@
 # MelodyMover
 ### music organizer (and transcoder)
 
-Version: 1.0.1
+Version: 1.0.0
 
 ## Description
 
