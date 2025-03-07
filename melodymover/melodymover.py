@@ -11,7 +11,7 @@ import threading
 import re
 
 SUPPORTED_FORMATS = ('.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.wma', '.opus')
-REMOVABLE_FORMATS = ('.nfo', '.cue', '.m3u', '.log', '.jpg', '.png')
+REMOVABLE_FORMATS = ('.nfo', '.cue', '.m3u', '.log', '.jpg', '.png', '.sfv', '.ini')
 
 class MelodyMoverApp(Gtk.Window):
     def __init__(self):
@@ -274,7 +274,13 @@ class MelodyMoverApp(Gtk.Window):
 
     def process_album(self, album_folder, new_name):
         dest_album_folder = os.path.join(self.dest_folder, new_name)
-        os.makedirs(dest_album_folder, exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            if os.path.exists(dest_path):
+                os.remove(dest_path)
+            shutil.copy2(src_path, dest_path)
+        except OSError as e:
+            raise Exception(f"File operation failed: {str(e)}")
 
         for root, _, files in os.walk(album_folder):
             for file in files:
@@ -300,7 +306,11 @@ class MelodyMoverApp(Gtk.Window):
                     shutil.copy2(src_path, dest_path)
 
         if album_folder != self.dest_folder:
-            shutil.rmtree(album_folder)
+            try:
+                if os.path.commonpath([album_folder]) != os.path.commonpath([album_folder, self.dest_folder]):
+                    shutil.rmtree(album_folder)
+            except Exception as e:
+                GLib.idle_add(self.update_status, album_folder, f"Deletion Error: {str(e)}")
 
     def transcode_file(self, src_path, dest_path):
         format = self.format_combo.get_active_text()
@@ -308,15 +318,21 @@ class MelodyMoverApp(Gtk.Window):
         sample_rate = self.sample_rate_combo.get_active_text()
         threads = self.threads_spin.get_value_as_int()
 
-        command = [
-            'ffmpeg', '-i', src_path,
-            '-acodec', self.get_codec(format),
-            '-ar', sample_rate,
-            '-b:a', f'{bitrate}k',
-            '-threads', str(threads),
-            dest_path
-        ]
-        subprocess.run(command, check=True)
+        if not shutil.which('ffmpeg'):
+            raise Exception("FFmpeg not found in system PATH")
+    
+        try:
+            command = [
+                'ffmpeg', '-i', src_path,
+                '-acodec', self.get_codec(format),
+                '-ar', sample_rate,
+                '-b:a', f'{bitrate}k',
+                '-threads', str(threads),
+                dest_path
+            ]
+            subprocess.run(command, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"FFmpeg error: {e.stderr}")
 
     def get_codec(self, format):
         codecs = {
@@ -330,13 +346,27 @@ class MelodyMoverApp(Gtk.Window):
         return codecs.get(format, 'copy')
 
     def update_metadata(self, file_path):
-        audio = mutagen.File(file_path, easy=True)
-        if audio:
+        try:
+            # Handle different file types properly
+            if file_path.lower().endswith('.flac'):
+                audio = mutagen.flac.FLAC(file_path)
+            elif file_path.lower().endswith('.mp3'):
+                audio = mutagen.mp3.EasyMP3(file_path)
+            else:
+                audio = mutagen.File(file_path, easy=True)
+            
+            if not audio:
+                return
+                
+            # Update metadata fields
             for field, entry in self.metadata_fields.items():
-                value = entry.get_text()
+                value = entry.get_text().strip()
                 if value:
                     audio[field] = value
             audio.save()
+            
+        except Exception as e:
+            print(f"Metadata error in {file_path}: {str(e)}")
 
     def update_drop_area_text(self):
         count = len(self.list_store)

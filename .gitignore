@@ -1,51 +1,28 @@
-# .gitignore for MelodyMover project
-
-# Ignore build artifacts and temporary files
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
-*.egg-info/
-dist/
+.Python
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Ignore virtual environment
-venv/
-env/
-.venv/
-
-# Ignore IDE and editor files
-.vscode/
-.idea/
+# Local development
 *.swp
 *.swo
-
-# Ignore OS generated files
-.DS_Store
-Thumbs.db
-
-# Ignore project-specific files
-.SRCINFO
-.releases.md
-.NOTES
-
-# Ignore logs and databases
-*.log
-*.sqlite3
-
-# Ignore configuration files that may contain sensitive information
-config.ini
-secrets.json
-
-# Ignore any local development files
-local_settings.py
-
-# Ignore package manager files
-pip-lock.txt
-poetry.lock
-
-# Ignore coverage reports
-.coverage
-htmlcov/
-
-# Ignore any backup files
-*.bak
+.env
+venv/

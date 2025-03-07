@@ -31,10 +31,14 @@ package() {
     mkdir -p "$pkgdir/usr/lib/python3.12/site-packages/melodymover"
     
     # Copy all Python files from the source directory
-    cp -r $pkgname/*.py "$pkgdir/usr/lib/python3.12/site-packages/melodymover/"
+    # install -Dm644 $pkgname/*.py -t "$pkgdir/$(python -c 'import site; print(site.getsitepackages()[0])')/melodymover/"
+    install -Dm644 melodymover/*.py -t "$pkgdir/$(python -c 'import site; print(site.getsitepackages()[0])')/melodymover/"
     
     # Copy .glade files if they exist
-    cp -r $pkgname/*.glade "$pkgdir/usr/lib/python3.12/site-packages/melodymover/" || true
+    # cp -r $pkgname/*.glade "$pkgdir/usr/lib/python3.12/site-packages/melodymover/" || true
+    if ls melodymover/*.glade >/dev/null 2>&1; then
+        install -Dm644 melodymover/*.glade -t "$pkgdir/$(python -c 'import site; print(site.getsitepackages()[0])')/melodymover/"
+    fi
     
     # Ensure the main script is executable
     chmod +x "$pkgdir/usr/bin/melodymover"

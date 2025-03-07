@@ -26,8 +26,8 @@ setup(
     ],
     python_requires=">=3.6",
     install_requires=[
-        "PyGObject",
-        "mutagen",
+        "PyGObject>=3.42",
+        "mutagen>=1.46",
     ],
     entry_points={
         "console_scripts": [

@@ -9,7 +9,7 @@ All notable changes to MelodyMover will be documented in this file.
 - Intuitive drag-and-drop interface for adding music folders
 - Batch metadata editing capabilities (artist, album, year, genre)
 - Audio file transcoding with customizable settings (format, bitrate, sample rate)
-- Option to remove unwanted file types (.nfo, .cue, .m2u, etc.)
+- Option to remove unwanted file types (.nfo, .cue, .m3u, etc.)
 - Progress tracking for batch operations
 - Cross-platform compatibility (Linux, macOS, Windows)
 
