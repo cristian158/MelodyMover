@@ -1,5 +1,5 @@
 # MelodyMover
-### music organizer (and transcoder)
+### Music organizer (and transcoder)
 
 Version: 1.0.0
 
@@ -48,7 +48,7 @@ We chose Python for developing MelodyMover due to several factors:
 ### Steps
 
 1. Clone the repository:
-    $ git clone https://github.com/yourusername/melodymover.git 
+    $ git clone https://github.com/cristian158/MelodyMover.git 
     $ cd melodymover 
 
 2. Install the required Python packages:
